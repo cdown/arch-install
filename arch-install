@@ -40,9 +40,10 @@ reflector \
     -c 'United Kingdom' -c France -c Germany -c Sweden -c Finland -c Denmark \
     -c Ireland -c Netherlands \
     -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
-cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 pacstrap "$mountpoint" base base-devel syslinux
+
+cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/    /    ext4 defaults 0 1

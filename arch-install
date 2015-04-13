@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+# curl -Lo setup https://bit.ly/1amkr3b
+
 read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone

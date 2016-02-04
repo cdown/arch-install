@@ -40,8 +40,9 @@ boot_partition=${device}2
 encrypted_root_partition=${device}3
 root_device=cryptroot
 root_device_path=/dev/mapper/$root_device
+swap_device=cryptswap
+swap_device_path=/dev/mapper/$swap_device
 
-mkswap -L "$short_hostname"-swap "$swap_partition"
 mkfs.ext4 -L "$short_hostname"-/boot "$boot_partition"
 cryptsetup -y -v luksFormat "$encrypted_root_partition"
 
@@ -67,10 +68,17 @@ arch-chroot "$mountpoint" mkinitcpio -p linux
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
+# Any one will do, so we just get the first
+swap_by_id=$(find -L /dev/disk/by-id -samefile "$swap_partition" | head -1)
+
+cat > "$mountpoint"/etc/crypttab << EOF
+$swap_device $swap_by_id /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
+EOF
+
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/boot /boot ext4 defaults 0 1
 LABEL=$short_hostname-/     /     ext4 defaults 0 1
-LABEL=$short_hostname-swap  none  swap sw       -1 0
+$swap_device_path           none  swap sw       -1 0
 EOF
 
 echo 'LANG="en_GB.UTF-8"' > "$mountpoint"/etc/locale.conf

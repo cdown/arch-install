@@ -22,18 +22,35 @@ n
 p
 2
 
++512M
+n
+p
+3
+
 
 a
-2
+3
 w
 EOF
 
 mountpoint=$(mktemp -d)
 
-mkswap -L "$short_hostname"-swap "$device"1
-mkfs.ext4 -L "$short_hostname"-/ "$device"2
+swap_partition=${device}1
+boot_partition=${device}2
+encrypted_root_partition=${device}3
+root_device=cryptroot
+root_device_path=/dev/mapper/$root_device
 
-mount LABEL="$short_hostname"-/ "$mountpoint"
+mkswap -L "$short_hostname"-swap "$swap_partition"
+mkfs.ext4 -L "$short_hostname"-/boot "$boot_partition"
+cryptsetup -y -v luksFormat "$encrypted_root_partition"
+
+cryptsetup open "$encrypted_root_partition" "$root_device"
+mkfs.ext4 -L "$short_hostname"-/ "$root_device_path"
+
+mount "$root_device_path" "$mountpoint"
+mkdir -p "$mountpoint"/boot
+mount "$boot_partition" "$mountpoint"/boot
 
 pacman -Syy
 pacman --noconfirm --ignore pacman -S reflector
@@ -45,11 +62,15 @@ reflector \
 
 pacstrap "$mountpoint" base base-devel syslinux
 
+sed -i '/^HOOKS=/s/filesystems/encrypt &/' "$mountpoint"/etc/mkinitcpio.conf
+arch-chroot "$mountpoint" mkinitcpio -p linux
+
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 cat > "$mountpoint"/etc/fstab << EOF
-LABEL=$short_hostname-/    /    ext4 defaults 0 1
-LABEL=$short_hostname-swap none swap sw       0 0
+LABEL=$short_hostname-/boot /boot ext4 defaults 0 1
+LABEL=$short_hostname-/     /     ext4 defaults 0 1
+LABEL=$short_hostname-swap  none  swap sw       -1 0
 EOF
 
 echo 'LANG="en_GB.UTF-8"' > "$mountpoint"/etc/locale.conf
@@ -61,6 +82,8 @@ echo "$hostname" > "$mountpoint"/etc/hostname
 
 arch-chroot "$mountpoint" syslinux-install_update -i -a -m
 
+encrypted_root_uuid=$(cryptsetup luksUUID "$encrypted_root_partition")
+
 cat > "$mountpoint"/boot/syslinux/syslinux.cfg << EOF
 PROMPT 0
 TIMEOUT 0
@@ -68,12 +91,12 @@ DEFAULT arch
 
 LABEL arch
     LINUX ../vmlinuz-linux
-    APPEND root=LABEL=$short_hostname-/ rw
+    APPEND cryptdevice=UUID=$encrypted_root_uuid:$root_device root=$root_device_path rw
     INITRD ../initramfs-linux.img
 
 LABEL archfallback
     LINUX ../vmlinuz-linux
-    APPEND root=LABEL=$short_hostname-/ rw
+    APPEND cryptdevice=UUID=$encrypted_root_uuid:$root_device root=$root_device_path rw
     INITRD ../initramfs-linux-fallback.img
 EOF
 

@@ -5,6 +5,7 @@
 read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
+read -rp "Encrypt (0/1): " encrypt
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
@@ -37,19 +38,26 @@ mountpoint=$(mktemp -d)
 
 swap_partition=${device}1
 boot_partition=${device}2
-encrypted_root_partition=${device}3
-root_device=cryptroot
-root_device_path=/dev/mapper/$root_device
-swap_device=cryptswap
-swap_device_path=/dev/mapper/$swap_device
+root_partition=${device}3
+
+root_crypt_device=cryptroot
+root_crypt_device_path=/dev/mapper/$root_crypt_device
+swap_crypt_device=cryptswap
+swap_crypt_device_path=/dev/mapper/$swap_crypt_device
 
 mkfs.ext4 -L "$short_hostname"-/boot "$boot_partition"
-cryptsetup -y -v luksFormat "$encrypted_root_partition"
 
-cryptsetup open "$encrypted_root_partition" "$root_device"
-mkfs.ext4 -L "$short_hostname"-/ "$root_device_path"
+if (( encrypt )); then
+    cryptsetup -y -v luksFormat "$root_partition"
+    cryptsetup open "$root_partition" "$root_crypt_device"
+    mkfs.ext4 -L "$short_hostname"-/ "$root_crypt_device_path"
+    mount "$root_crypt_device_path" "$mountpoint"
+else
+    mkswap -L "$short_hostname"-swap "$swap_partition"
+    mkfs.ext4 -L "$short_hostname"-/ "$root_partition"
+    mount "$root_partition" "$mountpoint"
+fi
 
-mount "$root_device_path" "$mountpoint"
 mkdir -p "$mountpoint"/boot
 mount "$boot_partition" "$mountpoint"/boot
 
@@ -63,23 +71,30 @@ reflector \
 
 pacstrap "$mountpoint" base base-devel syslinux
 
-sed -i '/^HOOKS=/s/filesystems/encrypt &/' "$mountpoint"/etc/mkinitcpio.conf
-arch-chroot "$mountpoint" mkinitcpio -p linux
+if (( encrypt )); then
+    sed -i '/^HOOKS=/s/filesystems/encrypt &/' "$mountpoint"/etc/mkinitcpio.conf
+    arch-chroot "$mountpoint" mkinitcpio -p linux
+fi
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 # Any one will do, so we just get the first
 swap_by_id=$(find -L /dev/disk/by-id -samefile "$swap_partition" | head -1)
 
-cat > "$mountpoint"/etc/crypttab << EOF
-$swap_device $swap_by_id /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
+(( encrypt )) && cat > "$mountpoint"/etc/crypttab << EOF
+$swap_crypt_device $swap_by_id /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
 EOF
 
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/boot /boot ext4 defaults 0 1
 LABEL=$short_hostname-/     /     ext4 defaults 0 1
-$swap_device_path           none  swap sw       -1 0
 EOF
+
+if (( encrypt )); then
+    echo "$swap_crypt_device_path none swap sw -1 0" >> "$mountpoint/etc/fstab"
+else
+    echo "LABEL=$short_hostname-swap none swap sw -1 0" >> "$mountpoint/etc/fstab"
+fi
 
 echo 'LANG="en_GB.UTF-8"' > "$mountpoint"/etc/locale.conf
 cat > "$mountpoint"/etc/locale.gen << 'EOF'
@@ -90,7 +105,12 @@ echo "$hostname" > "$mountpoint"/etc/hostname
 
 arch-chroot "$mountpoint" syslinux-install_update -i -a -m
 
-encrypted_root_uuid=$(cryptsetup luksUUID "$encrypted_root_partition")
+if (( encrypt )); then
+    encrypted_root_uuid=$(cryptsetup luksUUID "$root_partition")
+    append="cryptdevice=UUID=$encrypted_root_uuid:$root_crypt_device root=$root_crypt_device_path rw"
+else
+    append="root=LABEL=$short_hostname-/ rw"
+fi
 
 cat > "$mountpoint"/boot/syslinux/syslinux.cfg << EOF
 PROMPT 0
@@ -99,12 +119,12 @@ DEFAULT arch
 
 LABEL arch
     LINUX ../vmlinuz-linux
-    APPEND cryptdevice=UUID=$encrypted_root_uuid:$root_device root=$root_device_path rw
+    APPEND $append
     INITRD ../initramfs-linux.img
 
 LABEL archfallback
     LINUX ../vmlinuz-linux
-    APPEND cryptdevice=UUID=$encrypted_root_uuid:$root_device root=$root_device_path rw
+    APPEND $append
     INITRD ../initramfs-linux-fallback.img
 EOF
 

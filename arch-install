@@ -7,6 +7,7 @@ read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
 read -rp "Start fresh (0/1): " fresh
+read -rp "Dual boot (0/1): " dual_boot
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
@@ -36,7 +37,6 @@ else
 fi
 
 mountpoint=$(mktemp -d)
-
 
 root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device
@@ -94,8 +94,8 @@ else
 fi
 
 cat > "$mountpoint"/boot/syslinux/syslinux.cfg << EOF
-PROMPT 0
-TIMEOUT 0
+PROMPT 1
+TIMEOUT 5
 DEFAULT arch
 
 LABEL arch
@@ -107,6 +107,14 @@ LABEL archfallback
     LINUX ../vmlinuz-linux
     APPEND $append
     INITRD ../initramfs-linux-fallback.img
+EOF
+
+(( dual_boot )) && cat >> "$mountpoint"/boot/syslinux/syslinux.cfg << 'EOF'
+
+LABEL windows
+    MENU LABEL windows
+    COM32 chain.c32
+    APPEND hd0 1
 EOF
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime

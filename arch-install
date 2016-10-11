@@ -72,9 +72,8 @@ LABEL=$short_hostname-/boot /boot ext4 defaults 0 1
 LABEL=$short_hostname-/     /     ext4 defaults 0 1
 EOF
 
-echo 'LANG="en_GB.UTF-8"' > "$mountpoint"/etc/locale.conf
+echo 'LANG="en_US.UTF-8"' > "$mountpoint"/etc/locale.conf
 cat > "$mountpoint"/etc/locale.gen << 'EOF'
-en_GB.UTF-8 UTF-8
 en_US.UTF-8 UTF-8
 EOF
 echo "$hostname" > "$mountpoint"/etc/hostname

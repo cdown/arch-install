@@ -6,11 +6,13 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
+read -rp "Start fresh (0/1): " fresh
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
 
-fdisk "$device" << 'EOF'
+if (( fresh )); then
+    fdisk "$device" << 'EOF'
 o
 n
 p
@@ -26,11 +28,15 @@ a
 2
 w
 EOF
+    boot_partition=${device}1
+    root_partition=${device}2
+else
+    read -rp "Boot partition: " boot_partition
+    read -rp "Root partition: " root_partition
+fi
 
 mountpoint=$(mktemp -d)
 
-boot_partition=${device}1
-root_partition=${device}2
 
 root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device

@@ -41,15 +41,17 @@ mountpoint=$(mktemp -d)
 root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device
 
-mkfs.ext4 -L "$short_hostname"-/boot "$boot_partition"
+# 64 bit is disabled as of Syslinux 6.03, as pure 64-bit mode is not supported
+# any more in that version.
+mkfs.ext4 -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
 
 if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup open "$root_partition" "$root_crypt_device"
-    mkfs.ext4 -L "$short_hostname"-/ "$root_crypt_device_path"
+    mkfs.ext4 -O '^64bit' -L "$short_hostname"-/ "$root_crypt_device_path"
     mount "$root_crypt_device_path" "$mountpoint"
 else
-    mkfs.ext4 -L "$short_hostname"-/ "$root_partition"
+    mkfs.ext4 -O '^64bit' -L "$short_hostname"-/ "$root_partition"
     mount "$root_partition" "$mountpoint"
 fi
 

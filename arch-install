@@ -6,44 +6,40 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
+read -rp "Start fresh (0/1): " fresh
+read -rp "Dual boot (0/1): " dual_boot
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
 
-fdisk "$device" << 'EOF'
+if (( fresh )); then
+    fdisk "$device" << 'EOF'
 o
 n
 p
 1
 
-+1024M
-t
-82
++512M
 n
 p
 2
 
-+512M
-n
-p
-3
-
 
 a
-3
+2
 w
 EOF
+    boot_partition=${device}1
+    root_partition=${device}2
+else
+    read -rp "Boot partition: " boot_partition
+    read -rp "Root partition: " root_partition
+fi
 
 mountpoint=$(mktemp -d)
 
-swap_partition=${device}1
-boot_partition=${device}2
-root_partition=${device}3
-
 root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device
-swap_crypt_device=cryptswap
-swap_crypt_device_path=/dev/mapper/$swap_crypt_device
 
 mkfs.ext4 -L "$short_hostname"-/boot "$boot_partition"
 
@@ -53,7 +49,6 @@ if (( encrypt )); then
     mkfs.ext4 -L "$short_hostname"-/ "$root_crypt_device_path"
     mount "$root_crypt_device_path" "$mountpoint"
 else
-    mkswap -L "$short_hostname"-swap "$swap_partition"
     mkfs.ext4 -L "$short_hostname"-/ "$root_partition"
     mount "$root_partition" "$mountpoint"
 fi
@@ -78,27 +73,13 @@ fi
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
-# Any one will do, so we just get the first
-swap_by_id=$(find -L /dev/disk/by-id -samefile "$swap_partition" | head -1)
-
-(( encrypt )) && cat > "$mountpoint"/etc/crypttab << EOF
-$swap_crypt_device $swap_by_id /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
-EOF
-
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/boot /boot ext4 defaults 0 1
 LABEL=$short_hostname-/     /     ext4 defaults 0 1
 EOF
 
-if (( encrypt )); then
-    echo "$swap_crypt_device_path none swap sw -1 0" >> "$mountpoint/etc/fstab"
-else
-    echo "LABEL=$short_hostname-swap none swap sw -1 0" >> "$mountpoint/etc/fstab"
-fi
-
-echo 'LANG="en_GB.UTF-8"' > "$mountpoint"/etc/locale.conf
+echo 'LANG="en_US.UTF-8"' > "$mountpoint"/etc/locale.conf
 cat > "$mountpoint"/etc/locale.gen << 'EOF'
-en_GB.UTF-8 UTF-8
 en_US.UTF-8 UTF-8
 EOF
 echo "$hostname" > "$mountpoint"/etc/hostname
@@ -113,8 +94,8 @@ else
 fi
 
 cat > "$mountpoint"/boot/syslinux/syslinux.cfg << EOF
-PROMPT 0
-TIMEOUT 0
+PROMPT 1
+TIMEOUT 5
 DEFAULT arch
 
 LABEL arch
@@ -126,6 +107,14 @@ LABEL archfallback
     LINUX ../vmlinuz-linux
     APPEND $append
     INITRD ../initramfs-linux-fallback.img
+EOF
+
+(( dual_boot )) && cat >> "$mountpoint"/boot/syslinux/syslinux.cfg << 'EOF'
+
+LABEL windows
+    MENU LABEL windows
+    COM32 chain.c32
+    APPEND hd0 1
 EOF
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime

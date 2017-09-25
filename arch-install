@@ -10,6 +10,7 @@ read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
 read -rp "Start fresh (0/1): " fresh
 read -rp "Dual boot (0/1): " dual_boot
+read -rp "TRIM (0/1): " trim
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
@@ -71,9 +72,7 @@ mount "$boot_partition" "$mountpoint"/boot
 pacman -Syy
 pacman --noconfirm --ignore pacman -S reflector
 
-read -r hdd < /sys/block/"${device##*/}"/queue/rotational
-
-if ! (( hdd )); then
+if (( trim )); then
     fstrim "$mountpoint"
     fstrim "$mountpoint"/boot
 fi

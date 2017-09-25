@@ -61,7 +61,14 @@ mkdir -p "$mountpoint"/boot
 mount "$boot_partition" "$mountpoint"/boot
 
 pacman -Syy
-pacman --noconfirm --ignore pacman -S reflector
+pacman --noconfirm --ignore pacman -S reflector fstrim
+
+read -r hdd < /sys/block/"${device##*/}"/queue/rotational
+
+if ! (( hdd )); then
+    fstrim "$mountpoint"
+    fstrim "$mountpoint"/boot
+fi
 
 reflector \
     -c 'United Kingdom' -c France -c Germany -c Sweden -c Finland -c Denmark \

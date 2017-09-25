@@ -88,6 +88,9 @@ reflector \
 
 pacstrap "$mountpoint" base base-devel syslinux
 
+# https://bbs.archlinux.org/viewtopic.php?id=139370
+(( btrfs )) && ln -s /usr/bin/true "$mountpoint"/sbin/fsck.btrfs
+
 if (( encrypt )); then
     sed -i '/^HOOKS=/s/filesystems/encrypt &/' "$mountpoint"/etc/mkinitcpio.conf
     arch-chroot "$mountpoint" mkinitcpio -p linux

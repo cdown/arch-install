@@ -69,7 +69,7 @@ mkdir -p "$mountpoint"/boot
 mount "$boot_partition" "$mountpoint"/boot
 
 pacman -Syy
-pacman --noconfirm --ignore pacman -S reflector fstrim
+pacman --noconfirm --ignore pacman -S reflector
 
 read -r hdd < /sys/block/"${device##*/}"/queue/rotational
 

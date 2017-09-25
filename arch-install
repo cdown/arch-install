@@ -11,6 +11,7 @@ read -rp "Encrypt (0/1): " encrypt
 read -rp "Start fresh (0/1): " fresh
 read -rp "Dual boot (0/1): " dual_boot
 read -rp "TRIM (0/1): " trim
+read -rp "btrfs (0/1): " btrfs
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
@@ -56,13 +57,16 @@ root_crypt_device_path=/dev/mapper/$root_crypt_device
 # any more in that version.
 mkfs.ext4 -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
 
+mkfs_cmd=(mkfs.ext4 -O '^64bit')
+(( btrfs )) && mkfs_cmd=(mkfs.btrfs)
+
 if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup open "$root_partition" "$root_crypt_device"
-    mkfs.ext4 -O '^64bit' -L "$short_hostname"-/ "$root_crypt_device_path"
+    "${mkfs_cmd[@]}" -L "$short_hostname"-/ "$root_crypt_device_path"
     mount "$root_crypt_device_path" "$mountpoint"
 else
-    mkfs.ext4 -O '^64bit' -L "$short_hostname"-/ "$root_partition"
+    "${mkfs_cmd[@]}" -L "$short_hostname"-/ "$root_partition"
     mount "$root_partition" "$mountpoint"
 fi
 

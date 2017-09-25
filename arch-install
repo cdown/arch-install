@@ -87,9 +87,7 @@ reflector \
     -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 
 pacstrap "$mountpoint" base base-devel syslinux
-
-# https://bbs.archlinux.org/viewtopic.php?id=139370
-(( btrfs )) && ln -s /usr/bin/true "$mountpoint"/sbin/fsck.btrfs
+(( btrfs )) && pacstrap "$mountpoint" btrfs-progs
 
 if (( encrypt )); then
     sed -i '/^HOOKS=/s/filesystems/encrypt &/' "$mountpoint"/etc/mkinitcpio.conf

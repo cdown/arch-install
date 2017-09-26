@@ -77,8 +77,8 @@ pacman -Syy
 pacman --noconfirm --ignore pacman -S reflector
 
 if (( trim )); then
-    fstrim "$mountpoint"
-    fstrim "$mountpoint"/boot
+    fstrim -v "$mountpoint"
+    fstrim -v "$mountpoint"/boot
 fi
 
 reflector \

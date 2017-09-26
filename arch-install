@@ -86,7 +86,8 @@ reflector \
     -c Ireland -c Netherlands \
     -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 
-pacstrap "$mountpoint" base base-devel syslinux
+# dialog + wpa_supplicant allow using wifi-menu out of the box after reboot
+pacstrap "$mountpoint" base base-devel syslinux dialog wpa_supplicant
 (( btrfs )) && pacstrap "$mountpoint" btrfs-progs
 
 if (( encrypt )); then

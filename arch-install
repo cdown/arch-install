@@ -62,7 +62,7 @@ mkfs_cmd=(mkfs.ext4 -O '^64bit')
 
 if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"
-    cryptsetup open "$root_partition" "$root_crypt_device"
+    cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
     "${mkfs_cmd[@]}" -L "$short_hostname"-/ "$root_crypt_device_path"
     mount "$root_crypt_device_path" "$mountpoint"
 else

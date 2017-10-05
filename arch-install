@@ -87,7 +87,7 @@ reflector \
     -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 
 # dialog + wpa_supplicant allow using wifi-menu out of the box after reboot
-pacstrap "$mountpoint" base base-devel syslinux dialog wpa_supplicant
+pacstrap "$mountpoint" base base-devel syslinux dialog wpa_supplicant git ansible openssh
 (( btrfs )) && pacstrap "$mountpoint" btrfs-progs
 
 if (( encrypt )); then

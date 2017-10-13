@@ -83,8 +83,8 @@ fi
 
 reflector \
     -c 'United Kingdom' -c France -c Germany -c Sweden -c Finland -c Denmark \
-    -c Ireland -c Netherlands \
-    -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
+    -c Ireland -c Netherlands -c 'Hong Kong' -c Singapore -c 'United States' \
+    -c Canada -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 
 # dialog + wpa_supplicant allow using wifi-menu out of the box after reboot
 pacstrap "$mountpoint" base base-devel syslinux dialog wpa_supplicant git ansible openssh

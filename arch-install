@@ -9,7 +9,6 @@ read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
 read -rp "Start fresh (0/1): " fresh
-read -rp "Dual boot (0/1): " dual_boot
 read -rp "TRIM (0/1): " trim
 read -rp "btrfs (0/1): " btrfs
 
@@ -132,14 +131,6 @@ LABEL archfallback
     LINUX ../vmlinuz-linux
     APPEND $append
     INITRD ../initramfs-linux-fallback.img
-EOF
-
-(( dual_boot )) && cat >> "$mountpoint"/boot/syslinux/syslinux.cfg << 'EOF'
-
-LABEL windows
-    MENU LABEL windows
-    COM32 chain.c32
-    APPEND hd0 1
 EOF
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime

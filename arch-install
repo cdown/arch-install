@@ -88,11 +88,6 @@ reflector \
 pacstrap "$mountpoint" base base-devel syslinux git ansible
 (( btrfs )) && pacstrap "$mountpoint" btrfs-progs
 
-if (( encrypt )); then
-    sed -i '/^HOOKS=/s/filesystems/encrypt &/' "$mountpoint"/etc/mkinitcpio.conf
-    arch-chroot "$mountpoint" mkinitcpio -p linux
-fi
-
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 (( btrfs )) && root_fs=btrfs || root_fs=ext4

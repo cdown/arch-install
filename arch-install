@@ -85,8 +85,7 @@ reflector \
     -c Ireland -c Netherlands -c 'Hong Kong' -c Singapore -c 'United States' \
     -c Canada -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 
-# dialog + wpa_supplicant allow using wifi-menu out of the box after reboot
-pacstrap "$mountpoint" base base-devel syslinux dialog wpa_supplicant git ansible openssh
+pacstrap "$mountpoint" base base-devel syslinux git ansible
 (( btrfs )) && pacstrap "$mountpoint" btrfs-progs
 
 if (( encrypt )); then
@@ -135,5 +134,9 @@ EOF
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 arch-chroot "$mountpoint" locale-gen
+
+arch-chroot "$mountpoint" mkdir -p /root/git
+arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-desktop.git /root/git/ansible-desktop
+arch-chroot "$mountpoint" /root/git/ansible-desktop/run
 
 while ! arch-chroot "$mountpoint" passwd; do :; done

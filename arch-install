@@ -93,7 +93,6 @@ EOF
 echo "$hostname" > "$mountpoint"/etc/hostname
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
-arch-chroot "$mountpoint" locale-gen
 
 arch-chroot "$mountpoint" mkdir -p /root/git
 arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-desktop.git /root/git/ansible-desktop

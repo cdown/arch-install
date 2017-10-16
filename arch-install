@@ -96,10 +96,6 @@ LABEL=$short_hostname-/boot /boot ext4     defaults,noatime 0 1
 LABEL=$short_hostname-/     /     $root_fs defaults,noatime 0 1
 EOF
 
-echo 'LANG="en_US.UTF-8"' > "$mountpoint"/etc/locale.conf
-cat > "$mountpoint"/etc/locale.gen << 'EOF'
-en_US.UTF-8 UTF-8
-EOF
 echo "$hostname" > "$mountpoint"/etc/hostname
 
 arch-chroot "$mountpoint" syslinux-install_update -i -a -m

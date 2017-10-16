@@ -9,7 +9,6 @@ read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
 read -rp "Start fresh (0/1): " fresh
-read -rp "TRIM (0/1): " trim
 read -rp "btrfs (0/1): " btrfs
 
 # Avoid reaching max label length for ext*
@@ -74,11 +73,6 @@ mount "$boot_partition" "$mountpoint"/boot
 
 pacman -Syy
 pacman --noconfirm --ignore pacman -S reflector
-
-if (( trim )); then
-    fstrim -v "$mountpoint"
-    fstrim -v "$mountpoint"/boot
-fi
 
 reflector \
     -c 'United Kingdom' -c France -c Germany -c Sweden -c Finland -c Denmark \

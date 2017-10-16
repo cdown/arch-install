@@ -80,7 +80,6 @@ reflector \
     -c Canada -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 
 pacstrap "$mountpoint" base base-devel git ansible
-(( btrfs )) && pacstrap "$mountpoint" btrfs-progs
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 

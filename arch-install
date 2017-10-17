@@ -55,8 +55,8 @@ root_crypt_device_path=/dev/mapper/$root_crypt_device
 # any more in that version.
 mkfs.ext4 -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
 
-mkfs_cmd=(mkfs.ext4 -O '^64bit')
-(( btrfs )) && mkfs_cmd=(mkfs.btrfs)
+mkfs_cmd=(mkfs.ext4 -F -O '^64bit')
+(( btrfs )) && mkfs_cmd=(mkfs.btrfs -f)
 
 if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"

@@ -72,7 +72,7 @@ mkdir -p "$mountpoint"/boot
 mount "$boot_partition" "$mountpoint"/boot
 
 pacman -Syy
-pacman --noconfirm --ignore pacman -S reflector
+pacman --noconfirm --ignore pacman -S reflector tmux
 
 reflector \
     -c 'United Kingdom' -c France -c Germany -c Sweden -c Finland -c Denmark \
@@ -96,8 +96,13 @@ arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 arch-chroot "$mountpoint" mkdir -p /root/git
 arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-desktop.git /root/git/ansible-desktop
 
+echo "Root password:"
+while ! arch-chroot "$mountpoint" passwd; do :; done
+
 # systemd won't execute in a plain chroot, we need a namespaced container with
 # its own systemd pid 1.
-systemd-nspawn -b -D "$mountpoint" /root/git/ansible-desktop/run
-
-while ! arch-chroot "$mountpoint" passwd; do :; done
+session_name=ansible
+machine_name=ansible
+tmux new-session -d -s "$session_name" systemd-nspawn -b -M "$machine_name" -D "$mountpoint" --bind "$device" --bind "$boot_partition" --bind "$root_partition"
+tmux new-window -t "$session_name" "sleep 10 && systemd-run -t --machine \"$machine_name\" /root/git/ansible-desktop"
+tmux attach -t "$session_name"

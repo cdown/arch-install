@@ -95,6 +95,9 @@ arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 
 arch-chroot "$mountpoint" mkdir -p /root/git
 arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-desktop.git /root/git/ansible-desktop
-arch-chroot "$mountpoint" /root/git/ansible-desktop/run
+
+# systemd won't execute in a plain chroot, we need a namespaced container with
+# its own systemd pid 1.
+systemd-nspawn -b -D "$mountpoint" /root/git/ansible-desktop/run
 
 while ! arch-chroot "$mountpoint" passwd; do :; done

@@ -104,5 +104,6 @@ while ! arch-chroot "$mountpoint" passwd; do :; done
 session_name=ansible
 machine_name=ansible
 tmux new-session -d -s "$session_name" systemd-nspawn -b -M "$machine_name" -D "$mountpoint" --bind "$device" --bind "$boot_partition" --bind "$root_partition"
-tmux new-window -t "$session_name" "sleep 10 && systemd-run -t --machine \"$machine_name\" /root/git/ansible-desktop"
+tmux new-window -t "$session_name" "sleep 10 && systemd-run -t --machine \"$machine_name\" /root/git/ansible-desktop && machinectl poweroff ansible && tmux kill-session -t ansible"
+tmux select-window -t "$session_name:1"
 tmux attach -t "$session_name"

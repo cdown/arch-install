@@ -53,7 +53,7 @@ root_crypt_device_path=/dev/mapper/$root_crypt_device
 
 # 64 bit is disabled as of Syslinux 6.03, as pure 64-bit mode is not supported
 # any more in that version.
-mkfs.ext4 -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
+mkfs.ext4 -F -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
 
 mkfs_cmd=(mkfs.ext4 -F -O '^64bit')
 (( btrfs )) && mkfs_cmd=(mkfs.btrfs -f)

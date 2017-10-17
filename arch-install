@@ -109,7 +109,7 @@ echo "Root password:"
 while ! arch-chroot "$mountpoint" passwd; do :; done
 
 for user in cdown lin; do
-    if grep -q "^$user:" "$mountpoint" /etc/passwd; then
+    if grep -q "^$user:" "$mountpoint"/etc/passwd; then
         echo "$user password:"
         while ! arch-chroot "$mountpoint" passwd "$user"; do :; done
     fi

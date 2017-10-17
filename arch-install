@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-set -x
-
 # curl -Lo setup https://bit.ly/1amkr3b
+
+set -x
 
 read -rp "Hostname: " hostname
 read -rp "Device: " device

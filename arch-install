@@ -62,10 +62,10 @@ root_crypt_device_path=/dev/mapper/$root_crypt_device
 if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
-    mkfs.btrfs -F -L "$short_hostname"-/ "$root_crypt_device_path"
+    mkfs.btrfs -f -L "$short_hostname"-/ "$root_crypt_device_path"
     mount "$root_crypt_device_path" "$mountpoint"
 else
-    mkfs.btrfs -F -L "$short_hostname"-/ "$root_partition"
+    mkfs.btrfs -f -L "$short_hostname"-/ "$root_partition"
     mount "$root_partition" "$mountpoint"
 fi
 

@@ -8,14 +8,12 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
-read -rp "Start fresh (0/1): " fresh
 read -rp "btrfs (0/1): " btrfs
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
 
-if (( fresh )); then
-    fdisk "$device" << 'EOF'
+fdisk "$device" << 'EOF'
 o
 n
 p
@@ -31,20 +29,16 @@ a
 2
 w
 EOF
-    extra=''
+extra=''
 
-    if [[ $device == *nvme* ]]; then
-        # nvme devices look like /dev/nvme0n1 as the base device, then
-        # /dev/nvme0n1p1 as the partition
-        extra=p
-    fi
-
-    boot_partition=${device}${extra}1
-    root_partition=${device}${extra}2
-else
-    read -rp "Boot partition: " boot_partition
-    read -rp "Root partition: " root_partition
+if [[ $device == *nvme* ]]; then
+    # nvme devices look like /dev/nvme0n1 as the base device, then
+    # /dev/nvme0n1p1 as the partition
+    extra=p
 fi
+
+boot_partition=${device}${extra}1
+root_partition=${device}${extra}2
 
 mountpoint=$(mktemp -d)
 

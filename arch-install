@@ -8,11 +8,32 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
+read -rp "GPT (0/1): " gpt
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
+extra=''
 
-fdisk "$device" << 'EOF'
+if [[ $device == *nvme* ]]; then
+    # nvme devices look like /dev/nvme0n1 as the base device, then
+    # /dev/nvme0n1p1 as the partition
+    extra=p
+fi
+
+boot_partition=${device}${extra}1
+root_partition=${device}${extra}2
+
+if (( gpt )); then
+    sgdisk -Z "$device"
+    sgdisk -n 1:0:512M "$device"
+    sgdisk -t 1:ef00 "$device"  # part type to ESP
+    sgdisk -A 1:set:2 "$device" # legacy boot on
+    sgdisk -c 1:ESP "$device"
+    sgdisk -N 2 "$device"
+    sgdisk -c 2:Root "$device"
+    mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
+else
+    fdisk "$device" << 'EOF'
 o
 n
 p
@@ -28,25 +49,15 @@ a
 2
 w
 EOF
-extra=''
-
-if [[ $device == *nvme* ]]; then
-    # nvme devices look like /dev/nvme0n1 as the base device, then
-    # /dev/nvme0n1p1 as the partition
-    extra=p
+    # 64 bit is disabled as of Syslinux 6.03, as pure 64-bit mode is not
+    # supported any more in that version.
+    mkfs.ext4 -F -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
 fi
-
-boot_partition=${device}${extra}1
-root_partition=${device}${extra}2
 
 mountpoint=$(mktemp -d)
 
 root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device
-
-# 64 bit is disabled as of Syslinux 6.03, as pure 64-bit mode is not supported
-# any more in that version.
-mkfs.ext4 -F -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
 
 if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"

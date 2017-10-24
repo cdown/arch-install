@@ -7,7 +7,6 @@ set -x
 read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
-read -rp "Encrypt (0/1): " encrypt
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
@@ -36,15 +35,10 @@ mountpoint=$(mktemp -d)
 root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device
 
-if (( encrypt )); then
-    cryptsetup -y -v luksFormat "$root_partition"
-    cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
-    mkfs.btrfs -f -L "$short_hostname"-/ "$root_crypt_device_path"
-    mount -o noatime,compress=lzo "$root_crypt_device_path" "$mountpoint"
-else
-    mkfs.btrfs -f -L "$short_hostname"-/ "$root_partition"
-    mount -o noatime,compress=lzo "$root_partition" "$mountpoint"
-fi
+cryptsetup -y -v luksFormat "$root_partition"
+cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
+mkfs.btrfs -f -L "$short_hostname"-/ "$root_crypt_device_path"
+mount -o noatime,compress=lzo "$root_crypt_device_path" "$mountpoint"
 
 mkdir -p "$mountpoint"/boot
 mount "$boot_partition" "$mountpoint"/boot

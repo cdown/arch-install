@@ -40,10 +40,10 @@ if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
     mkfs.btrfs -f -L "$short_hostname"-/ "$root_crypt_device_path"
-    mount "$root_crypt_device_path" "$mountpoint"
+    mount -o noatime,compress=lzo "$root_crypt_device_path" "$mountpoint"
 else
     mkfs.btrfs -f -L "$short_hostname"-/ "$root_partition"
-    mount "$root_partition" "$mountpoint"
+    mount -o noatime,compress=lzo "$root_partition" "$mountpoint"
 fi
 
 mkdir -p "$mountpoint"/boot
@@ -63,7 +63,7 @@ cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/boot /boot vfat  defaults,noatime 0 1
-LABEL=$short_hostname-/     /     btrfs defaults,noatime 0 1
+LABEL=$short_hostname-/     /     btrfs defaults,noatime,compress=lzo 0 1
 EOF
 
 echo "$hostname" > "$mountpoint"/etc/hostname

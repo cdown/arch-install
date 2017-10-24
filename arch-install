@@ -8,7 +8,6 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Encrypt (0/1): " encrypt
-read -rp "GPT (0/1): " gpt
 
 # Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
@@ -23,36 +22,14 @@ fi
 boot_partition=${device}${extra}1
 root_partition=${device}${extra}2
 
-if (( gpt )); then
-    sgdisk -Z "$device"
-    sgdisk -n 1:0:512M "$device"
-    sgdisk -t 1:ef00 "$device"  # part type to ESP
-    sgdisk -A 1:set:2 "$device" # legacy boot on
-    sgdisk -c 1:ESP "$device"
-    sgdisk -N 2 "$device"
-    sgdisk -c 2:Root "$device"
-    mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
-else
-    fdisk "$device" << 'EOF'
-o
-n
-p
-1
-
-+512M
-n
-p
-2
-
-
-a
-2
-w
-EOF
-    # 64 bit is disabled as of Syslinux 6.03, as pure 64-bit mode is not
-    # supported any more in that version.
-    mkfs.ext4 -F -O '^64bit' -L "$short_hostname"-/boot "$boot_partition"
-fi
+sgdisk -Z "$device"
+sgdisk -n 1:0:512M "$device"
+sgdisk -t 1:ef00 "$device"  # part type to ESP
+sgdisk -A 1:set:2 "$device" # legacy boot on
+sgdisk -c 1:ESP "$device"
+sgdisk -N 2 "$device"
+sgdisk -c 2:Root "$device"
+mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
 
 mountpoint=$(mktemp -d)
 
@@ -84,10 +61,9 @@ pacstrap "$mountpoint" base base-devel git ansible
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
-(( gpt )) && boot_fs=vfat || boot_fs=ext4
 cat > "$mountpoint"/etc/fstab << EOF
-LABEL=$short_hostname-/boot /boot $boot_fs defaults,noatime 0 1
-LABEL=$short_hostname-/     /     btrfs    defaults,noatime 0 1
+LABEL=$short_hostname-/boot /boot vfat  defaults,noatime 0 1
+LABEL=$short_hostname-/     /     btrfs defaults,noatime 0 1
 EOF
 
 echo "$hostname" > "$mountpoint"/etc/hostname

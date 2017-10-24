@@ -8,7 +8,6 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 
-# Avoid reaching max label length for ext*
 short_hostname=${hostname::5}
 extra=''
 
@@ -24,7 +23,6 @@ root_partition=${device}${extra}2
 sgdisk -Z "$device"
 sgdisk -n 1:0:512M "$device"
 sgdisk -t 1:ef00 "$device"  # part type to ESP
-sgdisk -A 1:set:2 "$device" # legacy boot on
 sgdisk -c 1:ESP "$device"
 sgdisk -N 2 "$device"
 sgdisk -c 2:Root "$device"

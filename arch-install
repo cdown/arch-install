@@ -35,7 +35,7 @@ root_crypt_device_path=/dev/mapper/$root_crypt_device
 
 cryptsetup -y -v luksFormat "$root_partition"
 cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
-mkfs.btrfs -f -L "$short_hostname"-/ "$root_crypt_device_path"
+mkfs.btrfs -f -n 32768 -L "$short_hostname"-/ "$root_crypt_device_path"
 mount -o noatime,compress=lzo "$root_crypt_device_path" "$mountpoint"
 
 mkdir -p "$mountpoint"/boot

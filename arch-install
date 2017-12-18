@@ -72,6 +72,7 @@ machine_name=ansible
 tmux new-session -d -s "$session_name" \
     systemd-nspawn -b -M "$machine_name" -D "$mountpoint" \
         --bind /dev/mapper/control \
+        --bind /sys/firmware/efi/efivars \
         --bind "/lib/modules/$(uname -r)" \
         --bind "$device" \
         --bind "$boot_partition" \

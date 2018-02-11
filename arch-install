@@ -17,9 +17,7 @@ if [[ $device == *nvme* ]]; then
     extra=p
 fi
 
-for fs in "$device"*; do
-    wipefs -a "$fs"
-done
+wipefs -a "$device"
 
 sgdisk -Z "$device"
 

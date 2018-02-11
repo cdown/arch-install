@@ -27,6 +27,8 @@ sgdisk -n 0:0:+512M -t 1:ef00 -c 1:ESP "$device"
 sgdisk -n 0:0:+1G -t 1:8200 -c 1:Swap "$device"
 sgdisk -n 0:0:0 -c 3:Root "$device"
 
+partprobe "$device"
+
 boot_partition=${device}${extra}1
 swap_partition_raw=${device}${extra}2
 swap_partition_id=$(find -L /dev/disk/by-id -samefile "$swap_partition_raw" | head -1)

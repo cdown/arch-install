@@ -29,6 +29,9 @@ sgdisk -n 0:0:0 -c 3:Root "$device"
 
 partprobe "$device"
 
+# partprobe is async :(
+sleep 5
+
 boot_partition=${device}${extra}1
 swap_partition_raw=${device}${extra}2
 swap_partition_id=$(find -L /dev/disk/by-id -samefile "$swap_partition_raw" | head -1)

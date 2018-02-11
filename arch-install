@@ -17,6 +17,10 @@ if [[ $device == *nvme* ]]; then
     extra=p
 fi
 
+for fs in /dev/"$device"*; do
+    wipefs -a "$fs"
+done
+
 boot_partition=${device}${extra}1
 swap_partition_raw=${device}${extra}2
 swap_partition_id=$(find -L /dev/disk/by-id -samefile "$swap_partition_raw" | head -1)

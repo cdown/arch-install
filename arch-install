@@ -64,7 +64,7 @@ reflector \
     -c Ireland -c Netherlands -c 'Hong Kong' -c Singapore -c 'United States' \
     -c Canada -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 
-pacstrap "$mountpoint" base base-devel git ansible
+pacstrap "$mountpoint" base base-devel git ansible python2
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 

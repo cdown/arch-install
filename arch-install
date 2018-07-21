@@ -21,11 +21,41 @@ fi
 
 wipefs -a "$device"
 
-sgdisk -Z "$device"
+mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
 
-sgdisk -n 0:0:+512M -t 1:ef00 -c 1:ESP "$device"
-sgdisk -n 0:0:+2G -t 2:8200 -c 2:Swap "$device"
-sgdisk -n 0:0:0 -c 3:Root "$device"
+if (( gpt )); then
+    sgdisk -Z "$device"
+
+    sgdisk -n 0:0:+512M -t 1:ef00 -c 1:ESP "$device"
+    sgdisk -n 0:0:+2G -t 2:8200 -c 2:Swap "$device"
+    sgdisk -n 0:0:0 -c 3:Root "$device"
+else
+    fdisk "$device" << 'EOF'
+o
+n
+p
+1
+
++512M
+n
+p
+2
+
++2G
+t
+2
+82
+n
+p
+3
+
+
+a
+3
+w
+EOF
+fi
+
 
 partprobe "$device"
 

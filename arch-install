@@ -85,7 +85,9 @@ if (( encrypt )); then
     mount -o noatime,compress=zstd "$root_crypt_device_path" "$mountpoint"
 else
     mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_partition"
-    mount -o noatime,compress=zstd "$root_partition" "$mountpoint"
+
+    # It's possible that we are bootstrapping from a kernel that doesn't support zstd
+    mount -o noatime,compress=zstd "$root_partition" "$mountpoint" || mount -o noatime,compress=lzo "$root_partition" "$mountpoint"
 fi
 
 mkdir -p "$mountpoint"/boot

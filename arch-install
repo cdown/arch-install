@@ -75,15 +75,25 @@ pacstrap "$mountpoint" base base-devel git ansible python2
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
-cat > "$mountpoint"/etc/crypttab << EOF
-swap $swap_partition_id /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
-EOF
-
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/boot /boot vfat  defaults,noatime 0 1
 LABEL=$short_hostname-/     /     btrfs defaults,noatime,compress=zstd 0 1
+EOF
+
+if (( encrypt )); then
+    cat > "$mountpoint"/etc/crypttab << EOF
+swap $swap_partition_id /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
+EOF
+
+    cat >> "$mountpoint"/etc/fstab << EOF
 /dev/mapper/swap            none  swap  defaults 0 0
 EOF
+else
+    mkswap -L "$short_hostname"-swap "$swap_partition"
+    cat >> "$mountpoint"/etc/fstab << EOF
+LABEL=$short_hostname-swap none swap sw -1 0
+EOF
+fi
 
 echo "$hostname" > "$mountpoint"/etc/hostname
 

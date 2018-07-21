@@ -9,6 +9,7 @@ read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Machine type (desktop/server): " machine_type
 read -rp "Encrypt (0/1): " encrypt
+read -rp "GPT (0/1): " gpt
 
 short_hostname=${hostname::5}
 extra=''

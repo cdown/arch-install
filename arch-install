@@ -22,8 +22,6 @@ fi
 
 wipefs -a "$device"
 
-mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
-
 if (( gpt )); then
     sgdisk -Z "$device"
 
@@ -72,7 +70,6 @@ if ! [[ $swap_partition_id ]]; then
     echo "Cannot get swap partition ID for $swap_partition_raw" >&2
     exit 1
 fi
-
 
 mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
 

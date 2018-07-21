@@ -120,7 +120,7 @@ EOF
 /dev/mapper/swap            none  swap  defaults 0 0
 EOF
 else
-    mkswap -L "$short_hostname"-swap "$swap_partition"
+    mkswap -L "$short_hostname"-swap "$swap_partition_raw"
     cat >> "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-swap none swap sw -1 0
 EOF

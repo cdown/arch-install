@@ -8,6 +8,7 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Machine type (desktop/server): " machine_type
+read -rp "Encrypt (0/1): " encrypt
 
 short_hostname=${hostname::5}
 extra=''
@@ -49,10 +50,15 @@ mountpoint=$(mktemp -d)
 root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device
 
-cryptsetup -y -v luksFormat "$root_partition"
-cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
-mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_crypt_device_path"
-mount -o noatime,compress=zstd "$root_crypt_device_path" "$mountpoint"
+if (( encrypt )); then
+    cryptsetup -y -v luksFormat "$root_partition"
+    cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
+    mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_crypt_device_path"
+    mount -o noatime,compress=zstd "$root_crypt_device_path" "$mountpoint"
+else
+    mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_partition"
+    mount -o noatime,compress=zstd "$root_partition" "$mountpoint"
+fi
 
 mkdir -p "$mountpoint"/boot
 mount "$boot_partition" "$mountpoint"/boot

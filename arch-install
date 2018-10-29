@@ -154,6 +154,34 @@ if (( ansible )); then
         "sleep 10 && systemd-run -t --machine \"$machine_name\" /root/git/ansible/run && machinectl poweroff ansible && tmux kill-session -t ansible"
     tmux select-window -t "$session_name:1"
     tmux attach -t "$session_name"
+else
+    # This is a super minimal install for testing, just slap on syslinux
+    pacstrap "$mountpoint" syslinux
+    arch-chroot "$mountpoint" syslinux-install_update -i -a -m
+
+    if (( encrypt )); then
+        encrypted_root_uuid=$(cryptsetup luksUUID "$root_partition")
+        append="cryptdevice=UUID=$encrypted_root_uuid:$root_crypt_device:allow-discards root=$root_crypt_device_path rw"
+    else
+        append="root=LABEL=$short_hostname-/ rw"
+    fi
+
+    cat > "$mountpoint"/boot/syslinux/syslinux.cfg << EOF
+PROMPT 1
+TIMEOUT 5
+DEFAULT arch
+
+LABEL arch
+    LINUX ../vmlinuz-linux
+    APPEND $append
+    INITRD ../initramfs-linux.img
+
+LABEL archfallback
+    LINUX ../vmlinuz-linux
+    APPEND $append
+    INITRD ../initramfs-linux-fallback.img
+EOF
+
 fi
 
 echo "Root password:"

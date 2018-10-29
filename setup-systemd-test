@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+set -x
+
+if ! command -v aur >/dev/null 2>&1; then
+    curl -Lo /usr/local/bin/aur https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/bin/aur
+    chmod a+x /usr/local/bin/aur
+fi
+
+pacman -S --needed --noconfirm base base-devel
+
+command -v cower >/dev/null 2>&1 || aur cower
+
+if ! [[ -d $HOME/systemd-git ]]; then
+    (cd && cower -d systemd-git)
+fi
+
+cd ~/systemd-git
+
+rm -f *.pkg.tar.xz
+sed -i 's!git+https://github.com/systemd/systemd!git+https://github.com/cdown/systemd#branch=cdowntest!g' PKGBUILD
+makepkg -s
+pacman -U {libsystemd-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar.xz
+
+systemctl daemon-reexec

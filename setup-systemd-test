@@ -4,6 +4,20 @@
 
 set -x
 
+cat > /etc/sudoers << 'EOF'
+root  ALL=(ALL) ALL
+%sudo ALL=(ALL) ALL
+makepkg ALL=NOPASSWD: /usr/bin/pacman *
+EOF
+
+if ! getent passwd makepkg >/dev/null 2>&1; then
+    useradd -m makepkg
+    passwd makepkg
+fi
+
+# cower PGP key
+sudo -u makepkg gpg --keyserver pgp.mit.edu --recv-keys 1EB2638FF56C0C53
+
 if ! command -v aur >/dev/null 2>&1; then
     curl -Lo /usr/local/bin/aur https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/bin/aur
     chmod a+x /usr/local/bin/aur
@@ -13,15 +27,13 @@ pacman -S --needed --noconfirm base base-devel
 
 command -v cower >/dev/null 2>&1 || aur cower
 
-if ! [[ -d $HOME/systemd-git ]]; then
-    (cd && cower -d systemd-git)
+if ! [[ -d /home/makepkg/systemd-git ]]; then
+    (cd ~makepkg && sudo -iu makepkg cower -d systemd-git)
 fi
 
-cd ~/systemd-git
-
-rm -f *.pkg.tar.xz
-sed -i 's!git+https://github.com/systemd/systemd!git+https://github.com/cdown/systemd#branch=cdowntest!g' PKGBUILD
-makepkg -s
-pacman -U {libsystemd-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar.xz
+sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.tar.xz
+sudo -iu makepkg sed -i 's!git+https://github.com/systemd/systemd!git+https://github.com/cdown/systemd#branch=cdowntest!g' ~makepkg/systemd-git/PKGBUILD
+sudo -iu makepkg makepkg -s
+pacman -U ~makepkg/systemd-git/{libsystemd-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar.xz
 
 systemctl daemon-reexec

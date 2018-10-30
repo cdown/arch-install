@@ -16,7 +16,7 @@ if ! getent passwd makepkg >/dev/null 2>&1; then
 fi
 
 # cower PGP key
-sudo -u makepkg gpg --keyserver pgp.mit.edu --recv-keys 1EB2638FF56C0C53
+sudo -iu makepkg gpg --keyserver pool.sks-keyservers.net --recv-keys 1EB2638FF56C0C53
 
 if ! command -v aur >/dev/null 2>&1; then
     curl -Lo /usr/local/bin/aur https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/bin/aur

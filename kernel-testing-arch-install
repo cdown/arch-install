@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+# curl -Lo setup https://bit.ly/kerntest
+
 hostname=ktst
 mountpoint=/mnt/root
 timezone=UTC

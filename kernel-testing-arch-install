@@ -1,0 +1,54 @@
+#!/bin/bash -e
+
+hostname=ktst
+mountpoint=/mnt/root
+timezone=UTC
+device=/dev/sda
+
+set -x
+
+fdisk "$device" << 'EOF'
+o
+n
+p
+1
+
+
+a
+w
+EOF
+
+partprobe "$device"
+
+# partprobe is async :(
+sleep 5
+
+root_partition=${device}1
+
+mkfs.ext4 -L "$hostname"-/ "$root_partition"
+
+mkdir -p "$mountpoint"
+mount "$root_partition" "$mountpoint"
+
+pacman -Syy
+pacman --noconfirm --ignore pacman -S reflector
+
+reflector \
+    -c 'United Kingdom' -c France -c Germany -c Sweden -c Finland -c Denmark \
+    -c Ireland -c Netherlands -c 'Hong Kong' -c Singapore -c 'United States' \
+    -c Canada -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
+
+pacstrap "$mountpoint" base
+
+cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
+
+cat > "$mountpoint"/etc/fstab << EOF
+LABEL=$hostname-/     /     ext4 defaults 0 1
+EOF
+
+echo "$hostname" > "$mountpoint"/etc/hostname
+
+arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
+
+echo "Root password:"
+while ! arch-chroot "$mountpoint" passwd; do :; done

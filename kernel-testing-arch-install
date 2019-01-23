@@ -9,6 +9,8 @@ device=/dev/sda
 
 set -x
 
+wipefs -a "$device"
+
 fdisk "$device" << 'EOF'
 o
 n

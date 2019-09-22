@@ -15,9 +15,6 @@ if ! getent passwd makepkg >/dev/null 2>&1; then
     passwd makepkg
 fi
 
-# cower PGP key
-sudo -iu makepkg gpg --keyserver pool.sks-keyservers.net --recv-keys 1EB2638FF56C0C53
-
 if ! command -v aur >/dev/null 2>&1; then
     curl -Lo /usr/local/bin/aur https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/bin/aur
     chmod a+x /usr/local/bin/aur
@@ -25,10 +22,8 @@ fi
 
 pacman -S --needed base base-devel git
 
-command -v cower >/dev/null 2>&1 || aur cower
-
 if ! [[ -d /home/makepkg/systemd-git ]]; then
-    (cd ~makepkg && sudo -iu makepkg cower -d systemd-git)
+    (cd ~makepkg && aur systemd-git)
 fi
 
 sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.tar.xz

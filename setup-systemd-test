@@ -23,7 +23,7 @@ if ! command -v aur >/dev/null 2>&1; then
     chmod a+x /usr/local/bin/aur
 fi
 
-pacman -S --needed base base-devel
+pacman -S --needed base base-devel git
 
 command -v cower >/dev/null 2>&1 || aur cower
 

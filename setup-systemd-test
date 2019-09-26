@@ -15,20 +15,14 @@ if ! getent passwd makepkg >/dev/null 2>&1; then
     passwd makepkg
 fi
 
-if ! command -v aur >/dev/null 2>&1; then
-    curl -Lo /usr/local/bin/aur https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/bin/aur
-    chmod a+x /usr/local/bin/aur
-fi
-
 pacman -S --needed base base-devel git
 
 if ! [[ -d /home/makepkg/systemd-git ]]; then
-    (cd ~makepkg && aur systemd-git)
+    (cd ~makepkg && sudo -u makepkg git clone http://aur.archlinux.org/systemd-cdown-git.git)
 fi
 
-sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.tar.xz
-sudo -iu makepkg sed -i 's!git+https://github.com/systemd/systemd!git+https://github.com/cdown/systemd#branch=cdowntest!g' ~makepkg/systemd-git/PKGBUILD
-sudo -iu makepkg sh -c 'cd ~/systemd-git && makepkg -s --nocheck'
-pacman -U ~makepkg/systemd-git/{systemd-libs-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar.xz
+sudo -iu makepkg rm -f ~makepkg/systemd-cdown-git/*.pkg.tar.xz
+sudo -iu makepkg sh -c 'cd ~/systemd-cdown-git && makepkg -s --nocheck'
+pacman -U ~makepkg/systemd-cdown-git/{systemd-cdown-libs-git,systemd-cdown-git,systemd-cdown-sysvcompat-git}-*.pkg.tar.xz
 
 systemctl daemon-reexec

@@ -28,7 +28,7 @@ fi
 
 sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.tar.xz
 sudo -iu makepkg sed -i 's!git+https://github.com/systemd/systemd!git+https://github.com/cdown/systemd#branch=cdowntest!g' ~makepkg/systemd-git/PKGBUILD
-sudo -iu makepkg sh -c 'cd ~/systemd-git && makepkg -s'
+sudo -iu makepkg sh -c 'cd ~/systemd-git && makepkg -s --nocheck'
 pacman -U ~makepkg/systemd-git/{systemd-libs-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar.xz
 
 systemctl daemon-reexec

@@ -15,9 +15,9 @@ if ! getent passwd makepkg >/dev/null 2>&1; then
     passwd makepkg
 fi
 
-pacman -S --needed base base-devel git
+pacman -S --noconfirm --needed base base-devel git
 
-if ! [[ -d /home/makepkg/systemd-git ]]; then
+if ! [[ -d /home/makepkg/systemd-cdown-git ]]; then
     (cd ~makepkg && sudo -u makepkg git clone http://aur.archlinux.org/systemd-cdown-git.git)
 fi
 

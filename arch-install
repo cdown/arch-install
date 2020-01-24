@@ -95,7 +95,7 @@ mount "$boot_partition" "$mountpoint"/boot
 pacman -Syy
 pacman --noconfirm --ignore pacman -S tmux
 
-pacstrap "$mountpoint" base base-devel git ansible python2
+pacstrap "$mountpoint" base base-devel git ansible
 
 cat > /etc/pacman.d/mirrorlist << 'EOF'
 Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch

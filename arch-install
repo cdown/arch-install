@@ -83,12 +83,12 @@ if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
     mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_crypt_device_path"
-    mount -o noatime,compress=zstd "$root_crypt_device_path" "$mountpoint"
+    mount -o noatime,compress-force=zstd "$root_crypt_device_path" "$mountpoint"
 else
     mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_partition"
 
     # It's possible that we are bootstrapping from a kernel that doesn't support zstd
-    mount -o noatime,compress=zstd "$root_partition" "$mountpoint" || mount -o noatime,compress=lzo "$root_partition" "$mountpoint"
+    mount -o noatime,compress-force=zstd "$root_partition" "$mountpoint" || mount -o noatime,compress=lzo "$root_partition" "$mountpoint"
 fi
 
 mkdir -p "$mountpoint"/boot
@@ -107,7 +107,7 @@ cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/boot /boot vfat  defaults,noatime 0 1
-LABEL=$short_hostname-/     /     btrfs defaults,noatime,compress=zstd 0 1
+LABEL=$short_hostname-/     /     btrfs defaults,noatime,compress-force=zstd 0 1
 EOF
 
 if (( encrypt )); then

@@ -151,8 +151,10 @@ if (( ansible )); then
         extra_nspawn_args=(--bind /sys/firmware/efi/efivars)
     fi
 
+    # CAP_SYS_RAWIO is needed for the FIBMAP ioctl, issued by syslinux
     tmux new-session -d -s "$session_name" \
         systemd-nspawn -b -M "$machine_name" -D "$mountpoint" \
+            --capability=CAP_SYS_ADMIN,CAP_SYS_RAWIO \
             --bind /dev/mapper/control \
             --bind "/lib/modules/$(uname -r)" \
             --bind "$device" \

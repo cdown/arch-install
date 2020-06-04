@@ -64,10 +64,13 @@ sleep 5
 
 boot_partition=${device}${extra}1
 swap_partition_raw=${device}${extra}2
-swap_partition_id=$(find -L /dev/disk/by-id -samefile "$swap_partition_raw" | head -1)
 root_partition=${device}${extra}3
 
-if ! [[ $swap_partition_id ]]; then
+# Can't use by-id because it doesn't exist for virtio devices
+# https://bugs.launchpad.net/ubuntu/+source/udev/+bug/635096
+swap_partition_path=$(find -L /dev/disk/by-path -samefile "$swap_partition_raw" | head -1)
+
+if ! [[ $swap_partition_path ]]; then
     echo "Cannot get swap partition ID for $swap_partition_raw" >&2
     exit 1
 fi
@@ -110,7 +113,7 @@ EOF
 
 if (( encrypt )); then
     cat > "$mountpoint"/etc/crypttab << EOF
-swap $swap_partition_id /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
+swap $swap_partition_path /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
 EOF
 
     cat >> "$mountpoint"/etc/fstab << EOF

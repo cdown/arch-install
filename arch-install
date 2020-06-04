@@ -145,14 +145,20 @@ if (( ansible )); then
     # its own systemd pid 1.
     session_name=ansible
     machine_name=ansible
+
+    extra_nspawn_args=()
+    if [[ -d /sys/firmware/efi/efivars ]]; then
+        extra_nspawn_args=(--bind /sys/firmware/efi/efivars)
+    fi
+
     tmux new-session -d -s "$session_name" \
         systemd-nspawn -b -M "$machine_name" -D "$mountpoint" \
             --bind /dev/mapper/control \
-            --bind /sys/firmware/efi/efivars \
             --bind "/lib/modules/$(uname -r)" \
             --bind "$device" \
             --bind "$boot_partition" \
-            --bind "$root_partition"
+            --bind "$root_partition" \
+            "${extra_nspawn_args[@]}"
     tmux new-window -t "$session_name" \
         "sleep 10 && systemd-run -t --machine \"$machine_name\" /root/git/ansible/run && machinectl poweroff ansible && tmux kill-session -t ansible"
     tmux select-window -t "$session_name:1"

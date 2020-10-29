@@ -17,14 +17,14 @@ fi
 
 pacman -S --assume-installed systemd --noconfirm --needed base base-devel git
 
-if [[ -d /home/makepkg/systemd-cdown-git ]]; then
-    (cd ~makepkg/systemd-cdown-git && sudo -u makepkg git fetch -p && sudo -u makepkg git reset --hard origin/master)
+if [[ -d /home/makepkg/systemd-git ]]; then
+    (cd ~makepkg/systemd-git && sudo -u makepkg git fetch -p && sudo -u makepkg git reset --hard origin/master)
 else
-    (cd ~makepkg && sudo -u makepkg git clone http://aur.archlinux.org/systemd-cdown-git.git)
+    (cd ~makepkg && sudo -u makepkg git clone http://aur.archlinux.org/systemd-git.git)
 fi
 
-sudo -iu makepkg rm -f ~makepkg/systemd-cdown-git/*.pkg.tar.xz
-sudo -iu makepkg sh -c 'cd ~/systemd-cdown-git && makepkg -s --nocheck'
-pacman -U ~makepkg/systemd-cdown-git/{systemd-cdown-libs-git,systemd-cdown-git,systemd-cdown-sysvcompat-git}-*.pkg.tar.xz
+sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.tar.xz
+sudo -iu makepkg sh -c "cd ~/systemd-git && sed -i 's|git+https://github.com/systemd/systemd|git+https://github.com/cdown/systemd#branch=cdowntest|' PKGBUILD && makepkg -s --nocheck"
+pacman -U ~makepkg/systemd-git/{systemd-libs-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar.xz
 
 systemctl daemon-reexec

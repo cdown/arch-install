@@ -104,7 +104,8 @@ pacman -Sy --noconfirm --ignore pacman --needed archlinux-keyring
 
 pacman --noconfirm --ignore pacman -S tmux
 
-pacstrap "$mountpoint" base base-devel git ansible
+# dhcpcd doesn't come with base any more, ansible will pick it up later
+pacstrap "$mountpoint" base base-devel git ansible dhcpcd
 
 cat > /etc/pacman.d/mirrorlist << 'EOF'
 Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch

@@ -49,6 +49,7 @@ arch-chroot "$mountpoint" locale-gen
 arch-chroot "$mountpoint" systemctl enable sshd
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
+curl -Lo "$mountpoint"/etc/makepkg.conf https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/makepkg.conf
 
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$hostname-/     /     ext4 defaults 0 1

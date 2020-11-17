@@ -45,6 +45,8 @@ reflector \
 
 pacstrap "$mountpoint" base tmux openssh
 
+arch-chroot "$mountpoint" locale-gen
+
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 cat > "$mountpoint"/etc/fstab << EOF

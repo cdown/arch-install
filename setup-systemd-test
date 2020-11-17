@@ -26,7 +26,7 @@ else
 fi
 
 sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.tar.zst
-sudo -iu makepkg sh -c "cd ~/systemd-git && sed -i 's/local _meson_options=(/&-Db_sanitize=address,undefined/' PKGBUILD && sed -i 's|git+https://github.com/systemd/systemd|git+https://github.com/cdown/systemd#commit=$commit|' PKGBUILD && makepkg -s --nocheck"
+sudo -iu makepkg sh -c "cd ~/systemd-git && sed -i 's|git+https://github.com/systemd/systemd|git+https://github.com/cdown/systemd#commit=$commit|' PKGBUILD && makepkg -s --nocheck"
 pacman -U ~makepkg/systemd-git/{systemd-libs-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar.zst
 
 systemctl daemon-reexec

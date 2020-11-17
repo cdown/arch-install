@@ -46,6 +46,7 @@ reflector \
 pacstrap "$mountpoint" base tmux openssh
 
 arch-chroot "$mountpoint" locale-gen
+arch-chroot "$mountpoint" systemctl enable sshd
 
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 

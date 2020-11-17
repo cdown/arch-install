@@ -55,6 +55,7 @@ cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$hostname-/     /     ext4 defaults 0 1
 EOF
 
+echo "PermitRootLogin yes" > "$mountpoint"/etc/ssh/sshd_config
 echo "$hostname" > "$mountpoint"/etc/hostname
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime

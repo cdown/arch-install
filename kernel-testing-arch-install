@@ -43,7 +43,7 @@ cat > /etc/pacman.d/mirrorlist << 'EOF'
 Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch
 EOF
 
-pacstrap "$mountpoint" base tmux openssh dhcpcd
+pacstrap "$mountpoint" base tmux openssh dhcpcd vim
 
 arch-chroot "$mountpoint" locale-gen
 arch-chroot "$mountpoint" systemctl enable sshd dhcpcd

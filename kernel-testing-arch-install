@@ -35,7 +35,9 @@ mkdir -p "$mountpoint"
 mount "$root_partition" "$mountpoint"
 
 pacman-key --init
-pacman -Syy
+pacman-key --populate archlinux
+
+pacman -Sy --noconfirm --ignore pacman --needed archlinux-keyring
 
 cat > /etc/pacman.d/mirrorlist << 'EOF'
 Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch

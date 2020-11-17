@@ -99,7 +99,9 @@ mount "$boot_partition" "$mountpoint"/boot
 echo 'Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 
 pacman-key --init
-pacman -Syy
+pacman-key --populate archlinux
+pacman -Sy --noconfirm --ignore pacman --needed archlinux-keyring
+
 pacman --noconfirm --ignore pacman -S tmux
 
 pacstrap "$mountpoint" base base-devel git ansible

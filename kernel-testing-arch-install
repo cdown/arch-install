@@ -34,6 +34,7 @@ mkfs.ext4 -L "$hostname"-/ "$root_partition"
 mkdir -p "$mountpoint"
 mount "$root_partition" "$mountpoint"
 
+pacman-key --init
 pacman -Syy
 pacman --noconfirm --ignore pacman -S reflector
 

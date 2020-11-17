@@ -98,6 +98,7 @@ mount "$boot_partition" "$mountpoint"/boot
 # Make sure we have at least some kind of a reliable mirror to start with
 echo 'Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 
+pacman-key --init
 pacman -Syy
 pacman --noconfirm --ignore pacman -S tmux
 

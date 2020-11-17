@@ -36,12 +36,10 @@ mount "$root_partition" "$mountpoint"
 
 pacman-key --init
 pacman -Syy
-pacman --noconfirm --ignore pacman -S reflector
 
-reflector \
-    -c 'United Kingdom' -c France -c Germany -c Sweden -c Finland -c Denmark \
-    -c Ireland -c Netherlands -c 'Hong Kong' -c Singapore -c 'United States' \
-    -c Canada -f 6 --protocol http --sort rate --save /etc/pacman.d/mirrorlist
+cat > /etc/pacman.d/mirrorlist << 'EOF'
+Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch
+EOF
 
 pacstrap "$mountpoint" base tmux openssh dhcpcd
 

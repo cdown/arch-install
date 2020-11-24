@@ -1,0 +1,57 @@
+#!/bin/bash -ex
+
+# curl -Lo setup https://bit.ly/wslsetup
+
+hostname=wsl
+
+echo "$hostname" > /etc/hostname
+
+pacman-key --init
+pacman-key --populate archlinux
+pacman -Sy --noconfirm --ignore pacman --needed archlinux-keyring
+
+cat > /etc/pacman.d/mirrorlist << 'EOF'
+Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch
+EOF
+
+pacman -Syu base base-devel tmux openssh dhcpcd vim zsh git htop gdb python-pip p7zip ffmpeg mosh pass strace
+
+locale-gen
+
+curl -Lo /etc/makepkg.conf https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/makepkg.conf
+
+cat > /etc/sudoers << 'EOF'
+root  ALL=(ALL) ALL
+%sudo ALL=(ALL) ALL
+
+# Allow the build user access to pacman. This user can't be accessed without
+# being in the sudo group, anyway.
+makepkg ALL=NOPASSWD: /usr/bin/pacman *
+
+cdown ALL=(ALL) NOPASSWD:ALL
+EOF
+
+useradd -k /dev/null -m -s /bin/zsh cdown
+passwd cdown
+
+sudo -iu cdown mkdir git
+sudo -iu cdown git clone https://github.com/cdown/dotfiles.git ~cdown/git/dotfiles
+sudo -iu cdown sh -c 'cd ~/git/dotfiles && ./setup'
+
+sudo -iu cdown pip install srt ffsubsync chardet
+
+sudo -iu cdown ln -sfn /mnt/c/Users/Chris/Videos ~cdown/Videos
+
+sudo -iu cdown git clone https://github.com/cdown/actools ~cdown/git/actools
+
+curl -Lo /usr/local/bin/aur https://raw.githubusercontent.com/cdown/ansible-desktop/master/files/bin/aur
+chmod a+x /usr/local/bin/aur
+
+useradd -k /dev/null -m -s /bin/zsh makepkg
+passwd makepkg
+
+aur yay-bin
+
+yay -S sshrc nota
+
+# PGP/SSH

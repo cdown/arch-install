@@ -38,7 +38,7 @@ sudo -iu cdown mkdir git
 sudo -iu cdown git clone https://github.com/cdown/dotfiles.git ~cdown/git/dotfiles
 sudo -iu cdown sh -c 'cd ~/git/dotfiles && ./setup'
 
-sudo -iu cdown pip install srt ffsubsync chardet
+sudo -iu cdown pip install srt ffsubsync chardet s3cmd
 
 sudo -iu cdown ln -sfn /mnt/c/Users/Chris/Videos ~cdown/Videos
 

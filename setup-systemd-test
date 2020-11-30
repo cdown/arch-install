@@ -17,7 +17,7 @@ if ! getent passwd makepkg >/dev/null 2>&1; then
     passwd makepkg
 fi
 
-pacman -S --assume-installed systemd --noconfirm --needed base base-devel git perf strace gdb htop time bcc
+pacman -S --assume-installed systemd --noconfirm --needed base base-devel git perf strace gdb htop time bcc bpf
 
 if [[ -d /home/makepkg/systemd-git ]]; then
     (cd ~makepkg/systemd-git && sudo -u makepkg git fetch -p && sudo -u makepkg git reset --hard origin/master)

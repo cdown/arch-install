@@ -14,7 +14,7 @@ cat > /etc/pacman.d/mirrorlist << 'EOF'
 Server = http://mirror.bytemark.co.uk/archlinux/$repo/os/$arch
 EOF
 
-pacman -Syu base base-devel tmux openssh dhcpcd vim zsh git htop gdb python-pip p7zip ffmpeg mosh pass strace
+pacman -Syu base base-devel tmux openssh dhcpcd vim zsh git htop gdb python-pip p7zip ffmpeg mosh pass strace pngquant
 
 locale-gen
 

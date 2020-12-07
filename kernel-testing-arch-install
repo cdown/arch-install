@@ -60,5 +60,16 @@ echo "$hostname" > "$mountpoint"/etc/hostname
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 
+cat > /etc/sudoers << 'EOF'
+root  ALL=(ALL) ALL
+%sudo ALL=(ALL) ALL
+makepkg ALL=NOPASSWD: /usr/bin/pacman *
+EOF
+
+useradd -m makepkg
+passwd makepkg
+
+pacman -S --assume-installed systemd --noconfirm --needed base base-devel git perf strace gdb htop time bcc bpf
+
 echo "Root password:"
 while ! arch-chroot "$mountpoint" passwd; do :; done

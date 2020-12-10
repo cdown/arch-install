@@ -8,6 +8,7 @@ read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
 read -rp "Machine type (desktop/server): " machine_type
+read -rp "ext4/btrfs: " fs
 read -rp "Encrypt (0/1): " encrypt
 read -rp "GPT (0/1): " gpt
 read -rp "Ansible (0/1): " ansible
@@ -56,11 +57,27 @@ w
 EOF
 fi
 
-
 partprobe "$device"
 
 # partprobe is async :(
 sleep 5
+
+_mkfs_cmd() {
+    local _label _device
+
+    _label=${1?}
+    _device=${2?}
+
+    case $fs in
+        btrfs) mkfs.btrfs -f -l 32K -n 32K -L "$_label" "$_device" ;;
+        ext4)
+            mkfs.ext4 -L "$_label" "$_device"
+            tune2fs -o journal_data_writeback "$_device"
+            tune2fs -o nobarrier "$_device"
+        ;;
+        *) exit 3 ;;
+    esac
+}
 
 boot_partition=${device}${extra}1
 swap_partition_raw=${device}${extra}2
@@ -75,6 +92,11 @@ if ! [[ $swap_partition_path ]]; then
     exit 1
 fi
 
+extra_mount_options=''
+if [[ $fs == btrfs ]]; then
+    extra_mount_options+=',compress-force=zstd'
+fi
+
 mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
 
 mountpoint=$(mktemp -d)
@@ -85,11 +107,11 @@ root_crypt_device_path=/dev/mapper/$root_crypt_device
 if (( encrypt )); then
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
-    mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_crypt_device_path"
-    mount -o noatime,compress-force=zstd "$root_crypt_device_path" "$mountpoint"
+    _mkfs_cmd "$short_hostname"-/ "$root_crypt_device_path"
+    mount -o noatime"$extra_mount_options" "$root_crypt_device_path" "$mountpoint"
 else
-    mkfs.btrfs -f -l 32K -n 32K -L "$short_hostname"-/ "$root_partition"
-    mount -o noatime,compress-force=zstd "$root_partition" "$mountpoint"
+    _mkfs_cmd "$short_hostname"-/ "$root_partition"
+    mount -o noatime"$extra_mount_options" "$root_partition" "$mountpoint"
 fi
 
 mkdir -p "$mountpoint"/boot
@@ -115,7 +137,7 @@ cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 cat > "$mountpoint"/etc/fstab << EOF
 LABEL=$short_hostname-/boot /boot vfat  defaults,noatime 0 1
-LABEL=$short_hostname-/     /     btrfs defaults,noatime,compress-force=zstd 0 1
+LABEL=$short_hostname-/     /     $fs defaults,noatime$extra_mount_options 0 1
 EOF
 
 if (( encrypt )); then
@@ -143,6 +165,7 @@ if (( ansible )); then
     case $machine_type in
         desktop) arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-desktop.git /root/git/ansible ;;
         server) arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-server.git /root/git/ansible ;;
+        *) exit 4 ;;
     esac
 
     # systemd won't execute in a plain chroot, we need a namespaced container with

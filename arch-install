@@ -105,6 +105,7 @@ root_crypt_device=cryptroot
 root_crypt_device_path=/dev/mapper/$root_crypt_device
 
 if (( encrypt )); then
+    mkdir -m0700 /run/cryptsetup  # otherwise cryptsetup spews
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
     _mkfs_cmd "$short_hostname"-/ "$root_crypt_device_path"

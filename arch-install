@@ -13,7 +13,7 @@ read -rp "Encrypt (0/1): " encrypt
 read -rp "GPT (0/1): " gpt
 read -rp "Ansible (0/1): " ansible
 
-short_hostname=${hostname::5}
+short_hostname=${hostname::4}
 extra=''
 
 if [[ $device == *nvme* ]]; then
@@ -83,6 +83,10 @@ boot_partition=${device}${extra}1
 swap_partition_raw=${device}${extra}2
 root_partition=${device}${extra}3
 
+boot_label="$short_hostname-boot"
+swap_label="$short_hostname-swap"
+root_label="$short_hostname-root"
+
 # Can't use by-id because it doesn't exist for virtio devices
 # https://bugs.launchpad.net/ubuntu/+source/udev/+bug/635096
 swap_partition_path=$(find -L /dev/disk/by-path -samefile "$swap_partition_raw" | head -1)
@@ -97,7 +101,7 @@ if [[ $fs == btrfs ]]; then
     extra_mount_options+=',compress-force=zstd'
 fi
 
-mkfs.msdos -F32 -n "$short_hostname"-/boot "$boot_partition"
+mkfs.msdos -F32 -n "$boot_label" "$boot_partition"
 
 mountpoint=$(mktemp -d)
 
@@ -108,10 +112,10 @@ if (( encrypt )); then
     mkdir -m0700 /run/cryptsetup  # otherwise cryptsetup spews
     cryptsetup -y -v luksFormat "$root_partition"
     cryptsetup luksOpen --allow-discards "$root_partition" "$root_crypt_device"
-    _mkfs_cmd "$short_hostname"-/ "$root_crypt_device_path"
+    _mkfs_cmd "$root_label" "$root_crypt_device_path"
     mount -o noatime"$extra_mount_options" "$root_crypt_device_path" "$mountpoint"
 else
-    _mkfs_cmd "$short_hostname"-/ "$root_partition"
+    _mkfs_cmd "$root_label" "$root_partition"
     mount -o noatime"$extra_mount_options" "$root_partition" "$mountpoint"
 fi
 
@@ -137,8 +141,8 @@ EOF
 cp /etc/pacman.d/mirrorlist "$mountpoint"/etc/pacman.d/mirrorlist
 
 cat > "$mountpoint"/etc/fstab << EOF
-LABEL=$short_hostname-/boot /boot vfat  defaults,noatime 0 1
-LABEL=$short_hostname-/     /     $fs defaults,noatime$extra_mount_options 0 1
+LABEL=$boot_label /boot vfat  defaults,noatime 0 1
+LABEL=$root_label / $fs defaults,noatime$extra_mount_options 0 1
 EOF
 
 if (( encrypt )); then
@@ -150,9 +154,9 @@ EOF
 /dev/mapper/swap            none  swap  defaults,noauto,x-systemd.device-timeout=10 0 0
 EOF
 else
-    mkswap -L "$short_hostname"-swap "$swap_partition_raw"
+    mkswap -L "$swap_label" "$swap_partition_raw"
     cat >> "$mountpoint"/etc/fstab << EOF
-LABEL=$short_hostname-swap none swap sw -1 0
+LABEL=$swap_label none swap sw -1 0
 EOF
 fi
 
@@ -202,7 +206,7 @@ else
         encrypted_root_uuid=$(cryptsetup luksUUID "$root_partition")
         append="cryptdevice=UUID=$encrypted_root_uuid:$root_crypt_device:allow-discards root=$root_crypt_device_path rw"
     else
-        append="root=LABEL=$short_hostname-/ rw"
+        append="root=LABEL=$root_label rw"
     fi
 
     cat > "$mountpoint"/boot/syslinux/syslinux.cfg << EOF

@@ -199,7 +199,7 @@ if (( ansible )); then
     tmux attach -t "$session_name"
 else
     # This is a super minimal install for testing, just slap on syslinux
-    pacstrap "$mountpoint" syslinux
+    pacstrap "$mountpoint" syslinux linux
     arch-chroot "$mountpoint" syslinux-install_update -i -a -m
 
     if (( encrypt )); then

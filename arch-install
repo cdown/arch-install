@@ -151,7 +151,7 @@ swap $swap_partition_path /dev/urandom swap,cipher=aes-cbc-essiv:sha256,size=256
 EOF
 
     cat >> "$mountpoint"/etc/fstab << EOF
-/dev/mapper/swap            none  swap  defaults,noauto,x-systemd.device-timeout=10 0 0
+/dev/mapper/swap            none  swap  defaults,nofail,x-systemd.device-timeout=10 0 0
 EOF
 else
     mkswap -L "$swap_label" "$swap_partition_raw"

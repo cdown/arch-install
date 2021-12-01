@@ -183,6 +183,12 @@ if (( ansible )); then
         extra_nspawn_args=(--bind /sys/firmware/efi/efivars)
     fi
 
+    # On small memory machines, /tmp may not be enough for the heavy work done
+    # by initial ansible run. To avoid this use the disk we are installing to,
+    # and we will clean up later.
+    ansible_tmp_dir=$mountpoint/_INSTALLTMP
+    mkdir -- "$ansible_tmp_dir"
+
     # CAP_SYS_RAWIO is needed for the FIBMAP ioctl, issued by syslinux
     tmux new-session -d -s "$session_name" \
         systemd-nspawn -b -M "$machine_name" -D "$mountpoint" \
@@ -192,11 +198,14 @@ if (( ansible )); then
             --bind "$device" \
             --bind "$boot_partition" \
             --bind "$root_partition" \
+            --bind "$ansible_tmp_dir:/tmp" \
             "${extra_nspawn_args[@]}"
     tmux new-window -t "$session_name" \
         "sleep 20 && systemd-run -t --machine \"$machine_name\" /root/git/ansible/run && machinectl poweroff ansible && tmux kill-session -t ansible"
     tmux select-window -t "$session_name:1"
     tmux attach -t "$session_name"
+
+    rm -rf -- "$ansible_tmp_dir"
 else
     # This is a super minimal install for testing, just slap on syslinux
     pacstrap "$mountpoint" syslinux linux

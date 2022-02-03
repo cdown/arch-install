@@ -22,6 +22,9 @@ if [[ $device == *nvme* ]]; then
     extra=p
 fi
 
+# Make sure we have a good time so we won't get SSL verify errors
+systemctl restart systemd-timesyncd
+
 wipefs -a "$device"
 
 if (( gpt )); then

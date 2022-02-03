@@ -11,7 +11,13 @@ read -rp "Machine type (desktop/server): " machine_type
 read -rp "ext4/btrfs: " fs
 read -rp "Encrypt (0/1): " encrypt
 read -rp "GPT (0/1): " gpt
+read -rp "Dual boot (0/1): " dual_boot
 read -rp "Ansible (0/1): " ansible
+
+if (( dual_boot )) && ! (( gpt )); then
+    printf '%s\n' "No support for dual boot on non-UEFI" >&2
+    exit 1
+fi
 
 short_hostname=${hostname::4}
 extra=''
@@ -30,9 +36,20 @@ wipefs -a "$device"
 if (( gpt )); then
     sgdisk -Z "$device"
 
+    # On dual boot, the majority of the space is going to be NTFS and shared,
+    # so we only allocate 32G for Linux.
+    #
+    # We assume that Linux is installed first, then Windows is installed into
+    # the unallocated space.
+    if (( dual_boot )); then
+        root_size=+32G
+    else
+        root_size=0  # unlimited
+    fi
+
     sgdisk -n 0:0:+512M -t 1:ef00 -c 1:ESP "$device"
     sgdisk -n 0:0:+2G -t 2:8200 -c 2:Swap "$device"
-    sgdisk -n 0:0:0 -c 3:Root "$device"
+    sgdisk -n 0:0:"$root_size" -c 3:Root "$device"
 else
     fdisk "$device" << 'EOF'
 o

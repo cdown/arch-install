@@ -124,7 +124,9 @@ if [[ $fs == btrfs ]]; then
     extra_mount_options+=',compress-force=zstd'
 fi
 
-if ! (( use_existing_partitions )); then
+if (( use_existing_partitions )); then
+    fatlabel "$boot_partition" "$boot_label"
+else
     # It's fine to start over on /, but for boot we don't want to wipe any
     # existing Windows EFI data
     mkfs.msdos -F32 -n "$boot_label" "$boot_partition"

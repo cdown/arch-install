@@ -96,7 +96,6 @@ _mkfs_cmd() {
         ext4)
             mkfs.ext4 -L "$_label" "$_device"
             tune2fs -o journal_data_writeback "$_device"
-            tune2fs -o nobarrier "$_device"
         ;;
         *) exit 3 ;;
     esac

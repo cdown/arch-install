@@ -7,7 +7,6 @@ set -x
 read -rp "Hostname: " hostname
 read -rp "Device: " device
 read -rp "Timezone: " timezone
-read -rp "Machine type (desktop/server): " machine_type
 read -rp "ext4/btrfs: " fs
 read -rp "Encrypt (0/1): " encrypt
 read -rp "GPT (0/1): " gpt
@@ -195,12 +194,7 @@ arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
 
 if (( ansible )); then
     arch-chroot "$mountpoint" mkdir -p /root/git
-
-    case $machine_type in
-        desktop) arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-desktop.git /root/git/ansible ;;
-        server) arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-server.git /root/git/ansible ;;
-        *) exit 4 ;;
-    esac
+    arch-chroot "$mountpoint" git clone --recursive https://github.com/cdown/ansible-desktop.git /root/git/ansible
 
     # systemd won't execute in a plain chroot, we need a namespaced container with
     # its own systemd pid 1.

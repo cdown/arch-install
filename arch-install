@@ -91,7 +91,7 @@ _mkfs_cmd() {
     _device=${2?}
 
     case $fs in
-        btrfs) mkfs.btrfs -f -l 32K -n 32K -L "$_label" "$_device" ;;
+        btrfs) mkfs.btrfs -f -n 32K -L "$_label" "$_device" ;;
         ext4)
             mkfs.ext4 -L "$_label" "$_device"
             tune2fs -o journal_data_writeback "$_device"

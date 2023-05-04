@@ -12,8 +12,8 @@ else
     (cd ~makepkg && sudo -u makepkg git clone http://aur.archlinux.org/systemd-git.git)
 fi
 
-sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.tar
+sudo -iu makepkg rm -f ~makepkg/systemd-git/*.pkg.zst
 sudo -iu makepkg sh -c "cd ~/systemd-git && sed -i 's|git+https://github.com/systemd/systemd|git+https://github.com/cdown/systemd#commit=$commit|' PKGBUILD && makepkg -s --nocheck"
-pacman -U ~makepkg/systemd-git/{systemd-libs-git,systemd-git,systemd-sysvcompat-git}-*.pkg.tar
+pacman -U ~makepkg/systemd-git/{systemd-libs-git,systemd-git,systemd-sysvcompat-git}-*.pkg.zst
 
 systemctl daemon-reexec

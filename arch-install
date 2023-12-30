@@ -186,6 +186,7 @@ fi
 echo "$hostname" > "$mountpoint"/etc/hostname
 
 arch-chroot "$mountpoint" ln -sf /usr/share/zoneinfo/"$timezone" /etc/localtime
+arch-chroot "$mountpoint" hwclock --systohc
 
 if (( ansible )); then
     arch-chroot "$mountpoint" mkdir -p /root/git
